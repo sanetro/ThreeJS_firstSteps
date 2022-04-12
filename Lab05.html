@@ -1,0 +1,140 @@
+<html>
+
+	<head lang="en">
+
+		<title>Three js 3D environment</title>
+
+		<style>
+			body {
+				margin: 0;
+			}
+			
+			canvas {
+				display: block;
+			}
+		</style>
+
+	</head>
+	
+	<body>
+		
+		<script src="js/three.js"></script>
+
+		<script>	
+
+			/*
+				It won't work properlly if there is no pictures in dir. images/yokohama
+				
+				3D effect as in google maps in first person
+			*/
+
+			const path = 'images/yokohama/';
+			const format = '.jpg';
+			const urls = [
+				path + 'posx' + format, path + 'negx' + format,
+				path + 'posy' + format, path + 'negy' + format,
+				path + 'posz' + format, path + 'negz' + format
+			];
+	
+			
+			var scene = new THREE.Scene();
+			const reflectionCube = new THREE.CubeTextureLoader().load(urls);
+			reflectionCube.mapping = THREE.CubeReflectionMapping;
+			scene.background = reflectionCube;
+	
+			var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	
+			
+			var cubeGeometry = new THREE.SphereGeometry(1.0, 50, 50);
+			var cubeMaterial = new THREE.MeshLambertMaterial({
+				color: 0xffffff,
+				envMap: reflectionCube
+			});			
+
+			const torusGeometry = new THREE.TorusGeometry(10, 3, 16, 100);			
+			const torus = new THREE.Mesh( 
+				torusGeometry, 						// set geometry
+				new THREE.MeshBasicMaterial( { 
+					color: 0xffffff,
+					envMap: reflectionCube
+				 	} ), // set mesh - color yellow
+				);
+				torus.scale.set(0.1, 0.1, 0.1);
+			torus.position.set(0, 0, 0);
+			scene.add(torus);	
+
+	
+			var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+			cube.castShadow = false;
+			cube.position.set(0, 0, 0);
+	
+			var light = new THREE.DirectionalLight(0xffffff, 1, 100);
+			light.position.set(1, 1, 1);
+			light.castShadow = false;	
+
+			var light2 = new THREE.PointLight(0xffffff, 1, 100);
+			light2.position.set(1, -2, 0);
+			light2.castShadow = false;
+
+			scene.add(light2);			
+			scene.add(cube);			
+			scene.add(light);
+	
+			var movementCamera = 5;
+			var animationStatus = false;
+			var cameraX = 0, cameraY = 0, CameraZ = 0;			
+			
+			
+			var animate = function() {
+				requestAnimationFrame(animate);
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
+				torus.rotation.y += 0.01;
+				camera.position.z = movementCamera;				
+				renderer.render(scene, camera);
+			};
+
+			// Listener isn't async 
+			document.addEventListener('keydown', (event) => {
+				var name = event.key;
+				var code = event.code;
+				
+				// Move camera by W, A, S and D. Don't forget to turn off capslock
+				if (name == 'w') camera.rotation.x += 0.05;
+				if (name == 's') camera.rotation.x -= 0.05;
+				if (name == 'a') camera.rotation.y += 0.05;
+				if (name == 'd') camera.rotation.y -= 0.05;
+				
+				// Move objects (Torus and Sphere) by arrows
+				if (name == 'ArrowDown') {
+					cube.position.z += 0.05;
+					torus.position.z += 0.05;
+				} 
+				if (name == 'ArrowUp') {
+					cube.position.z -= 0.05;
+					torus.position.z -= 0.05;
+				} 
+				if (name == 'ArrowLeft') {
+					cube.position.x -= 0.05;
+					torus.position.x -= 0.05;
+				}
+				if (name == 'ArrowRight') {
+					cube.position.x += 0.05;
+					torus.position.x += 0.05;
+				}
+				console.log(name, camera.position);
+			}, false);
+	
+			animate();
+
+		</script>
+
+	</body>
+
+</html>
